@@ -118,30 +118,33 @@ class _AgreeScreenState extends State<AgreeScreen> {
                 fontSize: Sizes.size14,
               ),
             ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
+              child: GestureDetector(
+                onTap: _isAgreed
+                    ? () => Navigator.pop(context, _isAgreed)
+                    : () => {},
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: Sizes.size64,
+                  // width: Sizes.size96,
+                  alignment: const Alignment(0, 0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
+                    color: _isAgreed ? Colors.black : Colors.grey,
+                  ),
+                  child: const Text(
+                    "Next",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: Sizes.size24,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ),
           ],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 40, left: 20, right: 20),
-        child: GestureDetector(
-          onTap: _isAgreed ? () => Navigator.pop(context, _isAgreed) : () => {},
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            height: Sizes.size64,
-            // width: Sizes.size96,
-            alignment: const Alignment(0, 0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(32),
-              color: _isAgreed ? Colors.black : Colors.grey,
-            ),
-            child: const Text(
-              "Next",
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: Sizes.size24,
-                  fontWeight: FontWeight.w700),
-            ),
-          ),
         ),
       ),
     );

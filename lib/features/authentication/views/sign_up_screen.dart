@@ -21,6 +21,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool isAgree = false;
   bool isEmail = true;
   bool isShowDatePicker = false;
+  bool _pickingDate = false;
+  bool _writingEmail = false;
   DateTime initialDate = DateTime.now();
 
   Map<String, String> formData = {};
@@ -31,6 +33,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _setTextFieldDate(initialDate);
   }
 
+  @override
+  void dispose() {
+    _birthdayController.dispose();
+    super.dispose();
+  }
+
   void _setTextFieldDate(DateTime date) {
     final textDate = date.toString().split(" ").first;
     _birthdayController.value = TextEditingValue(text: textDate);
@@ -38,12 +46,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _onScaffoldTap() {
     FocusScope.of(context).unfocus();
+    setState(() {
+      _writingEmail = false;
+      _pickingDate = false;
+    });
   }
 
   _showDatePicker() {
     setState(() {
-      isShowDatePicker = !isShowDatePicker;
+      _pickingDate = true;
+      _writingEmail = false;
     });
+    showCupertinoModalPopup(
+      context: context,
+      barrierColor: Colors.white.withOpacity(0),
+      builder: (context) {
+        return SizedBox(
+          height: 200.0,
+          width: double.infinity,
+          child: CupertinoDatePicker(
+            maximumDate: initialDate,
+            initialDateTime: initialDate,
+            mode: CupertinoDatePickerMode.date,
+            onDateTimeChanged: _setTextFieldDate,
+            backgroundColor: Colors.white,
+          ),
+        );
+      },
+    ).then(
+      (value) {
+        _pickingDate = false;
+      },
+    );
   }
 
   _onSubmitTap() async {
@@ -78,7 +112,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return GestureDetector(
       onTap: _onScaffoldTap,
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        // resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: GestureDetector(
             onTap: () => Navigator.pop(context),
@@ -102,8 +136,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Sizes.size20,
+            padding: EdgeInsets.only(
+              left: Sizes.size20,
+              right: Sizes.size20,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: Form(
               key: _formKey,
@@ -168,6 +204,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         formData['name'] = value;
                       });
                     },
+                    onTap: () {
+                      setState(() {
+                        _writingEmail = false;
+                      });
+                    },
                   ),
                   Gaps.v10,
                   TextFormField(
@@ -220,6 +261,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                       );
                     },
+                    onTap: () {
+                      setState(() {
+                        _writingEmail = true;
+                      });
+                    },
                   ),
                   Gaps.v10,
                   TextFormField(
@@ -241,10 +287,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         fontSize: Sizes.size18,
                         fontWeight: FontWeight.normal,
                       ),
-                      helperText:
-                          "This will not be shown publicly. Confirm your own age, even if this account is for a business, a pet, or something else.",
-                      helperStyle: const TextStyle(fontSize: Sizes.size16),
-                      helperMaxLines: 5,
                       enabledBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
                           color: Colors.grey.shade400,
@@ -277,103 +319,97 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     },
                     onTap: _showDatePicker,
                   ),
-                  Stack(
-                    children: [
-                      Positioned(
-                          // bottom: 100,
-                          // width: MediaQuery.of(context).size.width,
-                          child: Container(
-                        padding: const EdgeInsets.only(
-                          top: 20,
-                          left: 20,
-                          right: 20,
-                          bottom: 30,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            GestureDetector(
-                              onTap: _formKey.currentState != null &&
-                                      _formKey.currentState!.validate()
-                                  ? _onSubmitTap
-                                  : null,
-                              child: isAgree
-                                  ? Container(
-                                      height: Sizes.size64,
-                                      // width: Sizes.size96,
-                                      alignment: const Alignment(0, 0),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(32),
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                      child: const Text(
-                                        "Sign up",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: Sizes.size24,
-                                            fontWeight: FontWeight.w700),
-                                      ),
-                                    )
-                                  : Align(
-                                      heightFactor: 1,
-                                      alignment: Alignment.bottomRight,
-                                      child: Container(
-                                        height: Sizes.size52,
-                                        width: Sizes.size96,
-                                        alignment: const Alignment(0, 0),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(26),
-                                          color:
-                                              _formKey.currentState != null &&
-                                                      _formKey.currentState!
-                                                          .validate()
-                                                  ? Colors.black
-                                                  : Colors.grey,
-                                        ),
-                                        child: const Text(
-                                          "Next",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: Sizes.size20,
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                    ),
+                  Gaps.v12,
+                  _pickingDate
+                      ? Text(
+                          "This will not be shown publicly. Confirm your\nown age, even if this account is for a\nbusiness, a pet, or something else.",
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 15,
+                          ),
+                        )
+                      : Container(),
+                  isAgree && !_pickingDate
+                      ? RichText(
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: Sizes.size14,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.grey.shade800,
                             ),
-                            if (isShowDatePicker)
-                              SizedBox(
-                                height: 200,
-                                child: CupertinoDatePicker(
-                                  maximumDate: initialDate,
-                                  initialDateTime: initialDate,
-                                  mode: CupertinoDatePickerMode.date,
-                                  onDateTimeChanged: _setTextFieldDate,
+                            children: [
+                              const TextSpan(
+                                text: "By signing up, you agree to the ",
+                              ),
+                              TextSpan(
+                                text: "Terms of Service",
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
                                 ),
-                              )
-                          ],
-                        ),
-                      ))
-                    ],
-                  ),
+                              ),
+                              const TextSpan(
+                                text: " and ",
+                              ),
+                              TextSpan(
+                                text: "Privacy Policy",
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                              const TextSpan(
+                                text: ", including ",
+                              ),
+                              TextSpan(
+                                text: "Cookie Use",
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                              const TextSpan(
+                                text:
+                                    ". Twitter\nmay use your contact information, including your\nemail address and phone number for purposes\noutlined in our Privacy Policy, like keeping your\naccount secure and personalizing our services,\nincluding ads. ",
+                              ),
+                              TextSpan(
+                                text: "Learn more",
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                              const TextSpan(
+                                text:
+                                    ". Others will be able to\nfind you by email or phone number, when provided,\nunless you choose otherwise. ",
+                              ),
+                              TextSpan(
+                                text: "here",
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                              const TextSpan(text: "."),
+                            ],
+                          ),
+                        )
+                      : Container(),
                 ],
               ),
             ),
           ),
         ),
-        /* bottomNavigationBar: Padding(
-          padding:
-              const EdgeInsets.only(bottom: 40, left: 20, right: 20, top: 0),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Sizes.size20,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              GestureDetector(
-                onTap: _formKey.currentState != null &&
-                        _formKey.currentState!.validate()
-                    ? _onSubmitTap
-                    : null,
-                child: isAgree
-                    ? Container(
+              isAgree
+                  ? GestureDetector(
+                      onTap: _formKey.currentState != null &&
+                              _formKey.currentState!.validate()
+                          ? _onSubmitTap
+                          : null,
+                      child: Container(
                         height: Sizes.size64,
                         // width: Sizes.size96,
                         alignment: const Alignment(0, 0),
@@ -388,43 +424,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               fontSize: Sizes.size24,
                               fontWeight: FontWeight.w700),
                         ),
-                      )
-                    : Align(
-                        heightFactor: 1,
-                        alignment: Alignment.bottomRight,
-                        child: Container(
-                          height: Sizes.size52,
-                          width: Sizes.size96,
-                          alignment: const Alignment(0, 0),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(26),
-                            color: _formKey.currentState != null &&
-                                    _formKey.currentState!.validate()
-                                ? Colors.black
-                                : Colors.grey,
-                          ),
-                          child: const Text(
-                            "Next",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: Sizes.size20,
-                                fontWeight: FontWeight.w600),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _writingEmail
+                            ? const Text(
+                                "Use phone instead",
+                                style: TextStyle(
+                                  fontSize: Sizes.size20,
+                                ),
+                              )
+                            : const Text(""),
+                        GestureDetector(
+                          onTap: _formKey.currentState != null &&
+                                  _formKey.currentState!.validate()
+                              ? _onSubmitTap
+                              : null,
+                          child: Container(
+                            height: Sizes.size52,
+                            width: Sizes.size96,
+                            alignment: const Alignment(0, 0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(26),
+                              color: _formKey.currentState != null &&
+                                      _formKey.currentState!.validate()
+                                  ? Colors.black
+                                  : Colors.grey,
+                            ),
+                            child: const Text(
+                              "Next",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Sizes.size20,
+                                  fontWeight: FontWeight.w600),
+                            ),
                           ),
                         ),
-                      ),
-              ),
-              SizedBox(
-                height: 200,
-                child: CupertinoDatePicker(
-                  maximumDate: initialDate,
-                  initialDateTime: initialDate,
-                  mode: CupertinoDatePickerMode.date,
-                  onDateTimeChanged: _setTextFieldDate,
-                ),
-              ),
+                      ],
+                    ),
             ],
           ),
-        ), */
+        ),
       ),
     );
   }
